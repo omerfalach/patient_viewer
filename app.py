@@ -90,12 +90,14 @@ url = 'https://czp2w6uy37.execute-api.us-east-1.amazonaws.com/test/get_patient'
 url_get = f"{url}?patient ='{patient_id}'"
 patient_response = requests.get(url_get).json()
 
-
+df_questionnaire = pd.DataFrame(columns= ['questionnaire_name', 'encounter_date','score'])
 questionnaire_list = []
+
 for i in patient_response['questionnaire_response'][0]:
-    if i['questionnaire_name'] not in questionnaire_list:
-        questionnaire_list.append( i['questionnaire_name'])
-chosen_questionnaire = st.sidebar.selectbox('Select Questionnaire', questionnaire_list)
+    # if i['questionnaire_name'] not in questionnaire_list:
+    #     questionnaire_list.append( i['questionnaire_name'])
+    df_questionnaire = df_questionnaire.append({'questionnaire_name': i['questionnaire_name'], 'encounter_date': i['encounter_date'],'score': i['score']}, ignore_index=True)
+chosen_questionnaire = st.sidebar.selectbox('Select Questionnaire', list(df_questionnaire['questionnaire_name'].unique()))
 
 
 url_eeg = 'https://czp2w6uy37.execute-api.us-east-1.amazonaws.com/test/get_patient_eeg'
@@ -105,7 +107,7 @@ eeg_patient_response = requests.get(url_get_eeg).json()
 score_list = []
 df_scores = pd.DataFrame(columns= ['score', 'plot_url'])
 for i in patient_response['plot_urls']:
-    df_scores = df_scores.append({'score':i['score'], 'plot_url':i['plot_url']})
+    df_scores = df_scores.append({'score':i['score'], 'plot_url':i['plot_url']},ignore_index= True)
     # if i['score'] not in score_list:
     #     score_list.append( i['score'])
 score = st.sidebar.selectbox('EEG_Parameter', list(df_scores))
@@ -164,12 +166,28 @@ st.subheader('Raw data')
 # strain = deepcopy(strain_data)
 
 with _lock:
+    df_questionnaire_new = df_questionnaire[df_questionnaire['questionnaire_name'] == chosen_questionnaire].copy
+    df_questionnaire_new["encounter_date"] = df_questionnaire_new["encounter_date"].astype("datetime64")
+
+    # Setting the Date as index
+
+    df_questionnaire_new = df_questionnaire_new.set_index("encounter_date")
+    fig, ax = plt.subplots()
+    ax.plot(df_questionnaire_new["score"], marker='o')
+
+    st.pyplot(fig)
+
+    # Labelling
+
+    plt.xlabel("Date")
+    plt.ylabel("Temp in Faherenheit")
+    plt.title("Pandas Time Series Plot")
     object = bucket.Object(score_url)
 
     file_stream = io.StringIO()
     object.download_fileobj(file_stream)
     img = mpimg.imread(file_stream)
-    st.image(img)
+    # st.image(img)
     # fig1 = strain.crop(cropstart, cropend).plot()
     # #fig1 = cropped.plot()
     # st.pyplot(fig1, clear_figure=True)
@@ -178,5 +196,8 @@ with _lock:
 
 with _lock:
 #     fig3 = bp_cropped.plot()
+    file_stream = io.StringIO()
+    object.download_fileobj(file_stream)
+    img = mpimg.imread(file_stream)
     st.image(img)
 
