@@ -166,7 +166,7 @@ st.subheader('Raw data')
 # strain = deepcopy(strain_data)
 
 with _lock:
-    df_questionnaire_new = df_questionnaire[df_questionnaire['questionnaire_name'] == chosen_questionnaire].copy
+    df_questionnaire_new = df_questionnaire[df_questionnaire['questionnaire_name'] == chosen_questionnaire].copy()
     df_questionnaire_new["encounter_date"] = df_questionnaire_new["encounter_date"].astype("datetime64")
 
     # Setting the Date as index
