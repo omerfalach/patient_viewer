@@ -12,8 +12,6 @@ import matplotlib as mpl
 import boto3
 import io
 
-aws_access_key_id = 'AKIAWYPL22X6A3VXRWX2' # Better not to directly expose in source code
-aws_secret_access_key = '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'
 s3 = boto3.resource(
                 "s3",
                 aws_access_key_id=aws_access_key_id,
